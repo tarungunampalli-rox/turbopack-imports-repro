@@ -1,0 +1,47 @@
+name: Repro
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bug-present:
+    name: build without tsconfig paths (must FAIL to demonstrate bug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: pnpm build (expect failure - Can't resolve '#/greeting')
+        run: |
+          pnpm build
+
+  workaround-works:
+    name: build with tsconfig paths workaround (must PASS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Patch tsconfig.json with the paths workaround
+        run: |
+          node -e "
+            const fs = require('fs');
+            const c = JSON.parse(fs.readFileSync('tsconfig.json', 'utf8'));
+            c.compilerOptions.paths = { '#/*': ['./src/*'] };
+            fs.writeFileSync('tsconfig.json', JSON.stringify(c, null, 2));
+          "
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
