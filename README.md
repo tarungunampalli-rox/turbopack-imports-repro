@@ -1,5 +1,8 @@
 # Turbopack does not resolve Node.js subpath imports (`package.json` `imports` field)
 
+> Reproduces on `next@canary` (currently `16.3.0-canary.36`) as well as the
+> latest stable (`16.2.6`).
+
 ## What this repro shows
 
 Next.js 16's Turbopack build (and dev) does not honor the Node.js [subpath
@@ -58,10 +61,13 @@ the project already resolves correctly via the `imports` field.
 
 ## Environment
 
-- next: 16.2.6
+- next: `canary` (pinned via `pnpm-lock.yaml`; latest at time of writing was `16.3.0-canary.36`)
 - react / react-dom: 19.2.0
 - node: tested on v24.15.0
 - pnpm: 11.1.0
+
+To bump to the newest canary, run `pnpm update next@canary` and commit the
+updated lockfile.
 
 ## Ask
 
