@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.18.1
       next:
         specifier: canary
         version: 16.3.0-canary.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -18,6 +21,9 @@ importers:
         specifier: 19.2.0
         version: 19.2.0(react@19.2.0)
     devDependencies:
+      '@types/lodash':
+        specifier: ^4.17.0
+        version: 4.17.24
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.19
@@ -247,6 +253,9 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
+  '@types/lodash@4.17.24':
+    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
+
   '@types/node@22.19.19':
     resolution: {integrity: sha512-dyh/xO2Fh5bYrfWaaqGrRQQGkNdmYw6AmaAUvYeUMNTWQtvb796ikLdmTchRmOlOiIJ1TDXfWgVx1QkUlQ6Hew==}
 
@@ -275,6 +284,9 @@ packages:
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
+
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   nanoid@3.3.12:
     resolution: {integrity: sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==}
@@ -492,6 +504,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@types/lodash@4.17.24': {}
+
   '@types/node@22.19.19':
     dependencies:
       undici-types: 6.21.0
@@ -514,6 +528,8 @@ snapshots:
 
   detect-libc@2.1.2:
     optional: true
+
+  lodash@4.18.1: {}
 
   nanoid@3.3.12: {}
 

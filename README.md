@@ -1,38 +1,56 @@
-# Turbopack does not resolve Node.js subpath imports (`package.json` `imports` field)
+# Turbopack does not resolve Node.js subpath imports whose key starts with `#/`
 
-> Reproduces on `next@canary` (currently `16.3.0-canary.36`) as well as the
-> latest stable (`16.2.6`).
+> Reproduces on `next@canary` (`16.3.0-canary.36`) and the latest stable (`16.2.6`).
+>
+> [vercel/next.js#93308](https://github.com/vercel/next.js/pull/93308) (merged
+> 2026-05-20) fixed `imports` entries pointing to **external packages** — that
+> case works in canary. The remaining bug is narrower than originally reported:
+> Turbopack rejects any alias **whose key starts with literal `#/`** (i.e. has
+> an empty name part), regardless of the target. Aliases with a non-empty name
+> like `#src/*` resolve correctly.
 
 ## What this repro shows
 
-Next.js 16's Turbopack build (and dev) does not honor the Node.js [subpath
-imports](https://nodejs.org/api/packages.html#subpath-imports) field declared
-in `package.json` (`"imports": { "#/*": "./src/*" }`).
+`src/app/page.tsx` exercises three subpath imports:
 
-Every other resolver in the stack (Node, `tsc`/`tsgo`, Vite/Vitest, ESLint with
-Node resolver, `oxlint`) honors the `imports` field natively. Turbopack does
-not — its [docs](https://nextjs.org/docs/app/api-reference/turbopack#module-resolution)
-only list `tsconfig.json` `paths`, `resolveAlias`, and `resolveExtensions` as
-supported module-resolution mechanisms.
-
-## Reproduce
-
-```sh
-pnpm install
-pnpm build
+```ts
+import { capitalize } from '#lodash'              // #lodash → "lodash"   (external, works)
+import { greeting } from '#src/greeting'           // #src/*  → "./src/*"  (named local, works)
+import { greeting } from '#/greeting'              // #/*     → "./src/*"  (bare-slash local, FAILS)
 ```
 
-Expected output:
+`pnpm build` fails only on the third line:
 
 ```
-> Build error occurred
 Error: Turbopack build failed with 2 errors:
-./src/app
+./src/app/page.tsx:3:1
 Module not found: Can't resolve '#/greeting'
-
-./src/app/page.tsx:1:1
-Module not found: Can't resolve '#/greeting'
+> 3 | import { greeting as fromSlashAlias } from '#/greeting'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ```
+
+Likely cause: Turbopack's resolver treats `#` as a URL fragment delimiter, so
+`#/...` parses as a fragment-only URI with no name component, and the resolver
+gives up. Aliases like `#src/...` start with a real identifier and resolve
+through the normal subpath-imports path.
+
+## Workarounds
+
+Two options, in order of preference:
+
+1. **Rename the alias** from `#/*` to a non-empty-name form like `#src/*`. This
+   needs no `tsconfig.json` change — Turbopack, Node, and `tsc` all resolve
+   `#src/*` correctly via the `imports` field alone.
+
+2. **Mirror the alias** in `tsconfig.json` `compilerOptions.paths` if you must
+   keep the `#/*` key:
+
+   ```json
+   { "compilerOptions": { "paths": { "#/*": ["./src/*"] } } }
+   ```
+
+   This re-routes resolution through Turbopack's `paths` support and bypasses
+   the buggy `#/` codepath.
 
 ## Workaround
 
@@ -54,10 +72,10 @@ the project already resolves correctly via the `imports` field.
 
 ## Project structure
 
-- `package.json` — declares `"imports": { "#/*": "./src/*" }` (Node subpath imports)
+- `package.json` — declares three `imports` entries: `#/*`, `#src/*`, `#lodash`
 - `tsconfig.json` — **does not** declare `compilerOptions.paths`
 - `src/greeting.ts` — exports a constant
-- `src/app/page.tsx` — imports `from '#/greeting'`
+- `src/app/page.tsx` — exercises all three aliases; only `#/...` fails
 
 ## Environment
 
@@ -71,7 +89,7 @@ updated lockfile.
 
 ## Ask
 
-Please add support for the `imports` field to Turbopack's resolver, so that
-projects standardized on Node subpath imports don't have to maintain a
-duplicate `paths` mapping in `tsconfig.json` solely as a Turbopack escape
-hatch.
+Please make Turbopack accept `imports` keys with empty name components
+(`#/*`, `#/foo`, …), so that projects following the popular `"#/*": "./src/*"`
+convention don't have to rename the alias or duplicate it in
+`tsconfig.json` `paths`.
